@@ -286,6 +286,7 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
     */
 	}
 
+  // 音声再生アクション
   public void actionPerformed(ActionEvent e) {
         System.out.println("アクション発生");
         System.out.println(e.getSource());
@@ -297,18 +298,16 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 
         theSoundPlayer2 = new SoundPlayer("443_2.wav");
         theSoundPlayer2.play();
-
   }
 
   // 置ける盤面かどうかを判定する関数
+  //
   public boolean judgeButton(int y, int x) {
     boolean flag = false;
     for (int j=-1;j<2;j++){
       for (int i=-1;i<2;i++){
         int posY = y + j;
         int posX = x + i;
-        //System.out.println(posX);
-        //System.out.println(posY);
         if(isExceededArea(posY, posX)){
           continue;
         }
@@ -370,7 +369,7 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
     return posX;
   }
 
-  // 置ける盤面かどうかを判定する関数
+  // 自動でパスする関数
   public boolean autoPass() {
     boolean flag = false;
     for (int j=0;j<8;j++){
@@ -391,7 +390,32 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
     return flag;
   }
 
+ // ひっくり返すことのできる盤面の個数を返す関数
+  public int passButtons(int y, int x, int j, int i){
+    int flipNum = 0;
+    for(int dy=j, dx=i; ; dy+=j, dx+=i) {
+      int posY = y + dy;
+      int posX = x + dx;
 
+      if(isExceededArea(posY, posX)){
+        continue;
+      }
+
+      Icon theIcon = buttonArray[posY][posX].getIcon();
+
+      if(theIcon == boardIcon){
+        flipNum = 0;
+        break;
+      }else if(theIcon == myIcon){
+        break;
+      }else if (theIcon == yourIcon){
+        flipNum++;
+      }
+    }
+    return passNum;
+  }
+
+// 音楽再生
 public class SoundPlayer{
     private AudioFormat format = null;
     private DataLine.Info info = null;
@@ -459,6 +483,5 @@ public class SoundPlayer{
     }
 
 }
-
 
 }
