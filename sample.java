@@ -192,33 +192,10 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 		//System.out.println("マウスを押した");
 	}
 	
-	public void mouseReleased(MouseEvent e) {//マウスで押して�?��オブジェクトを離したとき�?処�?
-		//System.out.println("マウスを放した");
+	public void mouseReleased(MouseEvent e) {
 	}
 	
-	public void mouseDragged(MouseEvent e) {//マウスでオブジェクトとをドラ�?��して�?��とき�?処�?
-		// System.out.println("マウスをドラ�?��");
-		// JButton theButton = (JButton)e.getComponent();//型が違うのでキャストす�?
-		// String theArrayIndex = theButton.getActionCommand();//ボタンの配�?の番号を取り�?�?
-
-		// Point theMLoc = e.getPoint();//発生�?コンポ�?ネントを基準とする相対座�?
-		// System.out.println(theMLoc);//�?���?��?�確認用?�に?�取得した�?ウスの位置をコンソールに出力す�?
-		// Point theBtnLocation = theButton.getLocation();//クリ�?��したボタンを座標を取得す�?
-        // if (!(theArrayIndex.equals("1"))){
-            // theBtnLocation.x += theMLoc.x-15;//ボタンの真ん中当たりにマウスカーソルがくるよ�?��補正する
-            // theBtnLocation.y += theMLoc.y-15;//ボタンの真ん中当たりにマウスカーソルがくるよ�?��補正する
-        
-            // theButton.setLocation(theBtnLocation);//マウスの位置にあわせてオブジェクトを移動す�?
-        // }
- 
-		// //送信�??�を作�?する?�受信時には?�この送った�??��に�??タを取り�?す．スペ�?スがデータの区�?��となる�?
-		// String msg = "MOVE"+" "+theArrayIndex+" "+theBtnLocation.x+" "+theBtnLocation.y;
-
-		// //サーバに�??�を送る
-		// out.println(msg);//送信�??タをバ�?��ァに書き�?�?
-		// out.flush();//送信�??タをフラ�?��ュ?�ネ�?��ワーク上にはき�?す）す�?
-
-		// repaint();//オブジェクト�?再描画を行う
+	public void mouseDragged(MouseEvent e) {
 	}
 
 	public void mouseMoved(MouseEvent e) {//マウスがオブジェクト上で移動したとき�?処�?

@@ -119,11 +119,12 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
           myIcon=whiteIcon;
           yourIcon=blackIcon;
         }
-        System.out.println(myTurn);
+        System.out.println("MyTurn"+myTurn);
 				while(true) {
 					String inputLine = br.readLine();//データを一行分だけ読み込んでみる
+          System.out.println("inputline="+inputLine);
 					if (inputLine != null) {//読み込んだときにデータが読み込まれたかどうかをチェックする
-						System.out.println(inputLine);//デバッグ（動作確認用）にコンソールに出力する
+						//デバッグ（動作確認用）にコンソールに出力する
 						String[] inputTokens = inputLine.split(" ");	//入力データを解析するために、スペースで切り分ける
 						String cmd = inputTokens[0];//コマンドの取り出し．１つ目の要素を取り出す
 						/*if(cmd.equals("MOVE")){//cmdの文字と"MOVE"が同じか調べる．同じ時にtrueとなる
@@ -136,9 +137,10 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 						}*/
               if(cmd.equals("PASS")){
                 myTurn = 1 - myTurn;
+                System.out.println("ボタンパス成功");
               }
               if(cmd.equals("PLACE")){
-                myTurn = 1 - myTurn;
+                System.out.println("MyTurnp"+myTurn);
                 String theBName = inputTokens[1];//ボタンの名前（番号）の取得
                 int theBnum = Integer.parseInt(theBName);//ボタンの名前を数値に変換する
                 int i = theBnum / 8;//(タテ、ヨコ)=(2, 3)のとき、タテ×8+ヨコより、19番目のボタン。
@@ -149,32 +151,52 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
                 }else{
                   buttonArray[i][j].setIcon(yourIcon);
                 }
-
-                int boardIconCount = 0;
-                int whiteIconCount = 0;
-                int blackIconCount = 0;
-                for(int ia = 0; ia <8; ia++){
-                  for(int ja = 0; ja < 8; ja++){
-                    Icon theIcon = buttonArray[ia][ja].getIcon();
-                    if(theIcon == boardIcon){
-                      boardIconCount ++;
-                    }else if(theIcon == whiteIcon){
-                      whiteIconCount ++;
-                    }else if(theIcon == blackIcon){
-                      blackIconCount ++;
+                if (judgeCount() != 0){
+                  myTurn = 1 - myTurn;
+                  //System.out.println("自動パス成功");
+                }else{
+                  System.out.println("自動パス成功");
+                  if(judgeCount2() == 0){
+                    System.out.println("終了");
+                  
+                    int boardIconCount = 0;
+                    int whiteIconCount = 0;
+                    int blackIconCount = 0;
+                    for(int ia = 0; ia <8; ia++){
+                      for(int ja = 0; ja < 8; ja++){
+                        Icon theIcon = buttonArray[ia][ja].getIcon();
+                        if(theIcon == boardIcon){
+                          boardIconCount ++;
+                        }else if(theIcon == whiteIcon){
+                          whiteIconCount ++;
+                        }else if(theIcon == blackIcon){
+                          blackIconCount ++;
+                        }
+                      }
+                    }
+                    System.out.println("白の数"+whiteIconCount);
+                    System.out.println("黒の数"+blackIconCount);
+                    if(whiteIconCount==blackIconCount){
+                      System.out.println("ひきわけ");
+                    }else if(whiteIconCount>blackIconCount){
+                      if(myIcon == whiteIcon){
+                        System.out.println("勝ち");
+                      }else{
+                        System.out.println("負け");
+                      }
+                    }else{
+                      if(myIcon == blackIcon){
+                        System.out.println("勝ち");
+                      }else{
+                        System.out.println("負け");
+                      }
                     }
                   }
                 }
-                if(boardIconCount==0 || (whiteIconCount==0&&blackIconCount>0) || (whiteIconCount>1&&blackIconCount==0)){
-                  System.out.println("白の数"+whiteIconCount);
-                  System.out.println("黒の数"+blackIconCount);
-                  if(whiteIconCount==0 && myIcon == whiteIcon || blackIconCount==0 && myIcon == blackIcon){
-                     System.out.println("負け");
-                  }else if(whiteIconCount>0 && myIcon == whiteIcon || blackIconCount>0 && myIcon == blackIcon){
-                     System.out.println("勝ち");
-                  }
-                }
+                System.out.println("MyTurnp2"+myTurn);
+
               }
+
               if(cmd.equals("FLIP")){
                 String theBName = inputTokens[1];//ボタンの名前（番号）の取得
                 int theBnum = Integer.parseInt(theBName);//ボタンの名前を数値に変換する
@@ -206,9 +228,8 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 	}
   	
 	public void mouseClicked(MouseEvent e) {//ボタンをクリックしたときの処理
-    
     if(myTurn==1){
-      System.out.println("クリック");
+      System.out.println("クリック"+myTurn);
       JButton theButton = (JButton)e.getComponent();//クリックしたオブジェクトを得る．型が違うのでキャストする
       String theArrayIndex = theButton.getActionCommand();//ボタンの配列の番号を取り出す
       Icon theIcon = theButton.getIcon();//theIconには，現在のボタンに設定されたアイコンが入る
@@ -221,13 +242,14 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 
       if(theIcon == boardIcon){
       int temp = Integer.parseInt(theArrayIndex);
-      System.out.println(temp);
+      System.out.println("theArrayIndex="+temp);
       int x = temp % 8;
       int y = temp / 8;
-      System.out.println(x);
-      System.out.println(y);
+
+      System.out.println("judgeButton="+judgeButton(y, x));
       if(judgeButton(y, x)){
         //置ける
+        System.out.println("実行");
         String msg = "PLACE"+" "+theArrayIndex+" "+myColor;
         out.println(msg);//送信データをフラッシュ（ネットワーク上にはき出す）する
         out.flush();
@@ -336,12 +358,13 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
   // ひっくり返すことのできる盤面の個数を返す関数
   public int flipButtons(int y, int x, int j, int i){
     int flipNum = 0;
+    if ( (j==0) && (i==0) ) return 0;
     for(int dy=j, dx=i; ; dy+=j, dx+=i) {
       int posY = y + dy;
       int posX = x + dx;
 
       if(isExceededArea(posY, posX)){
-        continue;
+        return 0;
       }
 
       Icon theIcon = buttonArray[posY][posX].getIcon();
@@ -369,36 +392,58 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
     return posX;
   }
 
-  // 自動でパスする関数
-  public boolean autoPass() {
+  // 
+  public boolean passJudge(int y, int x) {
     boolean flag = false;
-    for (int j=0;j<8;j++){
-      for (int i=0;i<8;i++){
-        Icon theIcon = buttonArray[j][i].getIcon();
-        if(theIcon==boardIcon){
-          if(judgeButton(j,i)){
-            flag=true;
-          }
+    int flipNum = 0;
+    for (int j=-1; j<=1; j++){
+        for (int i=-1; i<=1; i++){
+            if ( (j==0) && (i==0) ) continue;
+            if(myTurn==1){
+              flipNum = Buttons(y, x, j, i);
+            }else{
+              flipNum = flipButtons(y, x, j, i);
+            }
+            
+            if (flipNum >= 1){
+                flag = true;
+                break;
+            }
         }
-      }
-    }
-    if(flag==true){
-      flag=false;
-    }else{
-      flag=true;
     }
     return flag;
   }
 
- // ひっくり返すことのできる盤面の個数を返す関数
-  public int passButtons(int y, int x, int j, int i){
+    public boolean passJudge2(int y, int x) {
+    boolean flag = false;
     int flipNum = 0;
+    for (int j=-1; j<=1; j++){
+        for (int i=-1; i<=1; i++){
+            if ( (j==0) && (i==0) ) continue;
+            if(myTurn==1){
+              flipNum = flipButtons(y, x, j, i);
+            }else{
+              
+              flipNum = Buttons(y, x, j, i);
+            }
+            if (flipNum >= 1){
+                flag = true;
+                break;
+            }
+        }
+    }
+    return flag;
+  }
+
+    public int Buttons(int y, int x, int j, int i){
+    int flipNum = 0;
+    if ( (j==0) && (i==0) ) return 0;
     for(int dy=j, dx=i; ; dy+=j, dx+=i) {
       int posY = y + dy;
       int posX = x + dx;
 
       if(isExceededArea(posY, posX)){
-        continue;
+        return 0;
       }
 
       Icon theIcon = buttonArray[posY][posX].getIcon();
@@ -406,13 +451,45 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
       if(theIcon == boardIcon){
         flipNum = 0;
         break;
-      }else if(theIcon == myIcon){
+      }else if(theIcon == yourIcon){
         break;
-      }else if (theIcon == yourIcon){
+      }else if (theIcon == myIcon){
         flipNum++;
       }
     }
-    return passNum;
+    return flipNum;
+  }
+
+
+  public int judgeCount2(){
+    int count = 0;
+    for (int j = 0; j < 8; j++) {
+        for (int i = 0; i < 8; i++) {
+          Icon theIcon = buttonArray[j][i].getIcon();
+
+          if((theIcon == boardIcon) && passJudge2(j, i)) {
+                count++;
+            }
+        }
+    }
+    System.out.println("judgeCount="+count);
+    return count;
+  }
+
+  
+  public int judgeCount(){
+    int count = 0;
+    for (int j = 0; j < 8; j++) {
+        for (int i = 0; i < 8; i++) {
+          Icon theIcon = buttonArray[j][i].getIcon();
+
+          if((theIcon == boardIcon) && passJudge(j, i)) {
+                count++;
+            }
+        }
+    }
+    System.out.println("judgeCount="+count);
+    return count;
   }
 
 // 音楽再生
