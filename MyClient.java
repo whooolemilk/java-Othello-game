@@ -15,14 +15,15 @@ import javax.sound.sampled.Clip;
 import javax.sound.sampled.DataLine;
 
 public class MyClient extends JFrame implements MouseListener,MouseMotionListener {
-	private JButton buttonArray[][];//ボタン用の配列
+	private JButton buttonArray[][];
   private JButton passButton;
+  private JButton resetButton;
   private int myColor;
   private int myTurn;
   private ImageIcon myIcon, yourIcon;
 	private Container c;
 	private ImageIcon blackIcon, whiteIcon, boardIcon;
-	PrintWriter out;//出力用のライター
+	PrintWriter out;
 
   
   SoundPlayer theSoundPlayer2;
@@ -42,32 +43,40 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 		//ウィンドウを作成する
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);//ウィンドウを閉じるときに，正しく閉じるように設定する
 		setTitle("MyClient");//ウィンドウのタイトルを設定する
-		setSize(500,500);//ウィンドウのサイズを設定する
+		setSize(650,550);//ウィンドウのサイズを設定する
 		c = getContentPane();//フレームのペインを取得する
+    c.setBackground(Color.WHITE);//ウィンドウの色の設定
 
 		//アイコンの設定
-		whiteIcon = new ImageIcon("White.jpg");
-		blackIcon = new ImageIcon("Black.jpg");
-		boardIcon = new ImageIcon("GreenFrame.jpg");
+		whiteIcon = new ImageIcon("White1.jpg");
+		blackIcon = new ImageIcon("Black1.jpg");
+		boardIcon = new ImageIcon("GreenFrame1.jpg");
 
 		c.setLayout(null);//自動レイアウトの設定を行わない
 		//ボタンの生成
     passButton = new JButton();
     c.add(passButton);
     passButton.setText("パス");
-    passButton.setBounds(405,405,60,60);
+    passButton.setBounds(500,350,100,50);
     passButton.addMouseListener(this);
     passButton.setActionCommand("PASS");
 
-		buttonArray = new JButton[8][8];//ボタンの配列を５個作成する[0]から[4]まで使える
+    resetButton = new JButton();
+    c.add(resetButton);
+    resetButton.setText("リセット");
+    resetButton.setBounds(500,400,100,50);
+    resetButton.addMouseListener(this);
+    resetButton.setActionCommand("RESET");
+
+		buttonArray = new JButton[8][8];
 		for(int j=0;j<8;j++){
       for(int i=0; i<8; i++){
-			buttonArray[j][i] = new JButton(boardIcon);//ボタンにアイコンを設定する
-			c.add(buttonArray[j][i]);//ペインに貼り付ける
-			buttonArray[j][i].setBounds(i*50,j*50,50,50);//ボタンの大きさと位置を設定する．(x座標，y座標,xの幅,yの幅）
-			buttonArray[j][i].addMouseListener(this);//ボタンをマウスでさわったときに反応するようにする
-			//buttonArray[i][j].addMouseMotionListener(this);//ボタンをマウスで動かそうとしたときに反応するようにする
-			buttonArray[j][i].setActionCommand(Integer.toString(j*8+i));//ボタンに配列の情報を付加する（ネットワークを介してオブジェクトを識別するため）
+			buttonArray[j][i] = new JButton(boardIcon);
+			c.add(buttonArray[j][i]);
+			buttonArray[j][i].setBounds(i*50+50,j*50+50,50,50);
+			buttonArray[j][i].addMouseListener(this);
+			//buttonArray[i][j].addMouseMotionListener(this);
+			buttonArray[j][i].setActionCommand(Integer.toString(j*8+i));
       //buttonArray[j][i].addActionListener(this);
       }
 		}
@@ -76,10 +85,10 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
     buttonArray[4][3].setIcon(blackIcon);
     buttonArray[4][4].setIcon(whiteIcon);
 
-		//サーバに接続する
+    //サーバに接続する
 		Socket socket = null;
 		try {
-			//"localhost"は，自分内部への接続．localhostを接続先のIP Address（"133.42.155.201"形式）に設定すると他のPCのサーバと通信できる
+		  //"localhost"は，自分内部への接続．localhostを接続先のIP Address（"133.42.155.201"形式）に設定すると他のPCのサーバと通信できる
 			//10000はポート番号．IP Addressで接続するPCを決めて，ポート番号でそのPC上動作するプログラムを特定する
 			socket = new Socket("localhost", 10000);
 		} catch (UnknownHostException e) {
@@ -103,7 +112,7 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 			myName = n;
 		}
 		
-		//通信状況を監視し，受信データによって動作する
+	  //通信状況を監視し，受信データによって動作する
 		public void run() {
 			try{
 				InputStreamReader sisr = new InputStreamReader(socket.getInputStream());
@@ -113,51 +122,74 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
         String myNumberStr = br.readLine();
         int myNumberInt = Integer.parseInt(myNumberStr);
         if(myNumberInt % 2 != 0){
-          myColor=0;//player1:黒
+          myColor=0;//player1:Black
           myTurn=1;
           myIcon=blackIcon;
           yourIcon=whiteIcon;
         }else{
-          myColor=1;//player2:白
+          myColor=1;//player2:White
           myTurn=0;
           myIcon=whiteIcon;
           yourIcon=blackIcon;
         }
-        System.out.println("MyTurn"+myTurn);
+        if(myTurn==1){
+          System.out.println("あなたの番から始まるよ！");
+        }else{
+          System.out.println("相手の番から始まるよ！");
+        }
+        
 				while(true) {
-					String inputLine = br.readLine();//データを一行分だけ読み込んでみる
+					String inputLine = br.readLine();
           System.out.println("inputline="+inputLine);
-					if (inputLine != null) {//読み込んだときにデータが読み込まれたかどうかをチェックする
-						//デバッグ（動作確認用）にコンソールに出力する
-						String[] inputTokens = inputLine.split(" ");	//入力データを解析するために、スペースで切り分ける
-						String cmd = inputTokens[0];//コマンドの取り出し．１つ目の要素を取り出す
-						/*if(cmd.equals("MOVE")){//cmdの文字と"MOVE"が同じか調べる．同じ時にtrueとなる
-							//MOVEの時の処理(コマの移動の処理)
-							String theBName = inputTokens[1];//ボタンの名前（番号）の取得
-							int theBnum = Integer.parseInt(theBName);//ボタンの名前を数値に変換する
-							int x = Integer.parseInt(inputTokens[2]);//数値に変換する
-							int y = Integer.parseInt(inputTokens[3]);//数値に変換する
-							buttonArray[theBnum].setLocation(x,y);//指定のボタンを位置をx,yに設定する
-						}*/
-              if(cmd.equals("PASS")){
-                myTurn = 1 - myTurn;
-                System.out.println("ボタンパス成功");
+					if (inputLine != null) {
+						String[] inputTokens = inputLine.split(" ");
+						String cmd = inputTokens[0];
+            if(cmd.equals("PASS")){
+              myTurn = 1 - myTurn;
+              System.out.println("ボタンパス成功");
+              if(myTurn==1){
+                  System.out.println("あなたの番です");
+                }else{
+                  System.out.println("相手の番です");
+              }
+            }
+              if(cmd.equals("RESET")){
+                for(int j=0;j<8;j++){
+                  for(int i=0; i<8; i++){
+                  buttonArray[j][i].setIcon(boardIcon);
+                  }
+                }
+                buttonArray[3][3].setIcon(whiteIcon);
+                buttonArray[3][4].setIcon(blackIcon);
+                buttonArray[4][3].setIcon(blackIcon);
+                buttonArray[4][4].setIcon(whiteIcon); 
+                if(myTurn==1){
+                    System.out.println("あなたの番からはじまるよ");
+                  }else{
+                    System.out.println("相手の番からはじまるよ！");
+                }
+                System.out.println("リセット成功");
               }
               if(cmd.equals("PLACE")){
-                String theBName = inputTokens[1];//ボタンの名前（番号）の取得
-                int theBnum = Integer.parseInt(theBName);//ボタンの名前を数値に変換する
-                int i = theBnum / 8;//(タテ、ヨコ)=(2, 3)のとき、タテ×8+ヨコより、19番目のボタン。
-                int j = theBnum % 8;// したがって、iはヨコ、jはタテを表す
-                int theColor = Integer.parseInt(inputTokens[2]);//数値に変換する
+                String theBName = inputTokens[1];
+                int theBnum = Integer.parseInt(theBName);
+                int i = theBnum / 8;
+                int j = theBnum % 8;
+                int theColor = Integer.parseInt(inputTokens[2]);
                 
                 if(theColor==myColor){
-                  buttonArray[i][j].setIcon(myIcon);//blackIconに設定する
+                  buttonArray[i][j].setIcon(myIcon);
                   theSoundPlayer2.play();
                 }else{
                   buttonArray[i][j].setIcon(yourIcon);
                 }
                 if (judgeCount() != 0){
                   myTurn = 1 - myTurn;
+                  if(myTurn==1){
+                    System.out.println("あなたの番です");
+                  }else{
+                    System.out.println("相手の番です");
+                  }
                 }else{
                   System.out.println("自動パス成功");
                   if(judgeCount2() == 0){
@@ -197,8 +229,7 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
                     }
                   }
                 }
-                System.out.println("MyTurnp2"+myTurn);
-
+                //System.out.println("MyTurnp2"+myTurn);
               }
 
               if(cmd.equals("FLIP")){
@@ -231,20 +262,26 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 		net.setVisible(true);
 	}
   	
-	public void mouseClicked(MouseEvent e) {//ボタンをクリックしたときの処理
+	public void mouseClicked(MouseEvent e) {
     if(myTurn==1){
       System.out.println("クリック");
-      JButton theButton = (JButton)e.getComponent();//クリックしたオブジェクトを得る．型が違うのでキャストする
-      String theArrayIndex = theButton.getActionCommand();//ボタンの配列の番号を取り出す
-      Icon theIcon = theButton.getIcon();//theIconには，現在のボタンに設定されたアイコンが入る
+      JButton theButton = (JButton)e.getComponent();
+      String theArrayIndex = theButton.getActionCommand();
+      Icon theIcon = theButton.getIcon();
 
      
 
       if(theArrayIndex.equals("PASS")){
         String msg = "PASS";
-        out.println(msg);//送信データをフラッシュ（ネットワーク上にはき出す）する
+        out.println(msg);
         out.flush();
       }
+
+      if(theArrayIndex.equals("RESET")){
+        String msg = "RESET";
+        out.println(msg);
+        out.flush();
+      }      
 
       if(theIcon == boardIcon){
       int temp = Integer.parseInt(theArrayIndex);
@@ -258,7 +295,7 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
         System.out.println("実行");
         theSoundPlayer2 = new SoundPlayer("443_2.wav");
         String msg = "PLACE"+" "+theArrayIndex+" "+myColor;
-        out.println(msg);//送信データをフラッシュ（ネットワーク上にはき出す）する
+        out.println(msg);
         out.flush();
       } else {
         //置けない
@@ -269,54 +306,25 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
     }
 	}
 	
-	public void mouseEntered(MouseEvent e) {//マウスがオブジェクトに入ったときの処理
-		/*System.out.println("マウスが入った");*/
+	public void mouseEntered(MouseEvent e) {
 	}
 	
-	public void mouseExited(MouseEvent e) {//マウスがオブジェクトから出たときの処理
-		/*System.out.println("マウス脱出");*/
+	public void mouseExited(MouseEvent e) {
 	}
 	
-	public void mousePressed(MouseEvent e) {//マウスでオブジェクトを押したときの処理（クリックとの違いに注意）
-		/*System.out.println("マウスを押した");*/
+	public void mousePressed(MouseEvent e) {
 	}
 	
-	public void mouseReleased(MouseEvent e) {//マウスで押していたオブジェクトを離したときの処理
-		/*System.out.println("マウスを放した");*/
+	public void mouseReleased(MouseEvent e) {
 	}
 	
-	public void mouseDragged(MouseEvent e) {//マウスでオブジェクトとをドラッグしているときの処理
-		/* System.out.println("マウスをドラッグ");
-		JButton theButton = (JButton)e.getComponent();//型が違うのでキャストする
-		String theArrayIndex = theButton.getActionCommand();//ボタンの配列の番号を取り出す
-    if(!theArrayIndex.equals("0")){
-      Point theMLoc = e.getPoint();//発生元コンポーネントを基準とする相対座標
-      System.out.println(theMLoc);//デバッグ（確認用）に，取得したマウスの位置をコンソールに出力する
-      Point theBtnLocation = theButton.getLocation();//クリックしたボタンを座標を取得する
-      theBtnLocation.x += theMLoc.x-15;//ボタンの真ん中当たりにマウスカーソルがくるように補正する
-      theBtnLocation.y += theMLoc.y-15;//ボタンの真ん中当たりにマウスカーソルがくるように補正する
-  
-      //送信情報を作成する（受信時には，この送った順番にデータを取り出す．スペースがデータの区切りとなる）
-      String msg = "MOVE"+" "+theArrayIndex+" "+theBtnLocation.x+" "+theBtnLocation.y;
-
-      //サーバに情報を送る
-      out.println(msg);//送信データをバッファに書き出す
-      out.flush();//送信データをフラッシュ（ネットワーク上にはき出す）する
-
-      repaint();//オブジェクトの再描画を行う
-    }*/
+	public void mouseDragged(MouseEvent e) {
 	}
 
-	public void mouseMoved(MouseEvent e) {//マウスがオブジェクト上で移動したときの処理
-		/*System.out.println("マウス移動");
-		int theMLocX = e.getX();//マウスのx座標を得る
-		int theMLocY = e.getY();//マウスのy座標を得る
-		System.out.println(theMLocX+","+theMLocY);//コンソールに出力する
-    */
+	public void mouseMoved(MouseEvent e) {
 	}
 
   // 置ける盤面かどうかを判定する関数
-  //
   public boolean judgeButton(int y, int x) {
     boolean flag = false;
     for (int j=-1;j<2;j++){
@@ -515,20 +523,20 @@ public class SoundPlayer{
         soundThread = new Thread(){
             public void run(){
                 long time = (long)clip.getFrameLength();//44100で割ると再生時間（秒）がでる
-                System.out.println("PlaySound time="+time);
+                //System.out.println("PlaySound time="+time);
                 long endTime = System.currentTimeMillis()+time*1000/44100;
                 clip.start();
-                System.out.println("PlaySound time="+(int)(time/44100));
+                //System.out.println("PlaySound time="+(int)(time/44100));
                 while(true){
                     if(stopFlag){//stopFlagがtrueになった終了
-                        System.out.println("PlaySound stop by stopFlag");
+                        //System.out.println("PlaySound stop by stopFlag");
                         clip.stop();
                         return;
                     }
-                    System.out.println("endTime="+endTime);
-                    System.out.println("currentTimeMillis="+System.currentTimeMillis());
+                    //System.out.println("endTime="+endTime);
+                    //System.out.println("currentTimeMillis="+System.currentTimeMillis());
                     if(endTime < System.currentTimeMillis()){//曲の長さを過ぎたら終了
-                        System.out.println("PlaySound stop by sound length");
+                        //System.out.println("PlaySound stop by sound length");
                         if(loopFlag) {
                             clip.loop(1);//無限ループとなる
                         } else {
@@ -549,7 +557,7 @@ public class SoundPlayer{
 
     public void stop(){
         stopFlag = true;
-        System.out.println("StopSound");
+        //System.out.println("StopSound");
     }
 
 }
