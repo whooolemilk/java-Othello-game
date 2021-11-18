@@ -7,13 +7,14 @@ import java.awt.event.*;
 import javax.swing.*;
 import java.util.*;
 
-import java.io.File;//音楽再生時に必要
-import javax.sound.sampled.AudioFormat;//音楽再生時に必要
-import javax.sound.sampled.AudioSystem;//音楽再生時に必要
-import javax.sound.sampled.Clip;//音楽再生時に必要
-import javax.sound.sampled.DataLine;//音楽再生時に必要
+//音楽再生時に必要
+import java.io.File;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.DataLine;
 
-public class MyClient extends JFrame implements MouseListener,MouseMotionListener,ActionListener {
+public class MyClient extends JFrame implements MouseListener,MouseMotionListener {
 	private JButton buttonArray[][];//ボタン用の配列
   private JButton passButton;
   private int myColor;
@@ -22,6 +23,8 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 	private Container c;
 	private ImageIcon blackIcon, whiteIcon, boardIcon;
 	PrintWriter out;//出力用のライター
+
+  
   SoundPlayer theSoundPlayer2;
 
 	public MyClient() {
@@ -65,6 +68,7 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 			buttonArray[j][i].addMouseListener(this);//ボタンをマウスでさわったときに反応するようにする
 			//buttonArray[i][j].addMouseMotionListener(this);//ボタンをマウスで動かそうとしたときに反応するようにする
 			buttonArray[j][i].setActionCommand(Integer.toString(j*8+i));//ボタンに配列の情報を付加する（ネットワークを介してオブジェクトを識別するため）
+      //buttonArray[j][i].addActionListener(this);
       }
 		}
     buttonArray[3][3].setIcon(whiteIcon);
@@ -140,20 +144,20 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
                 System.out.println("ボタンパス成功");
               }
               if(cmd.equals("PLACE")){
-                System.out.println("MyTurnp"+myTurn);
                 String theBName = inputTokens[1];//ボタンの名前（番号）の取得
                 int theBnum = Integer.parseInt(theBName);//ボタンの名前を数値に変換する
                 int i = theBnum / 8;//(タテ、ヨコ)=(2, 3)のとき、タテ×8+ヨコより、19番目のボタン。
                 int j = theBnum % 8;// したがって、iはヨコ、jはタテを表す
                 int theColor = Integer.parseInt(inputTokens[2]);//数値に変換する
+                
                 if(theColor==myColor){
                   buttonArray[i][j].setIcon(myIcon);//blackIconに設定する
+                  theSoundPlayer2.play();
                 }else{
                   buttonArray[i][j].setIcon(yourIcon);
                 }
                 if (judgeCount() != 0){
                   myTurn = 1 - myTurn;
-                  //System.out.println("自動パス成功");
                 }else{
                   System.out.println("自動パス成功");
                   if(judgeCount2() == 0){
@@ -229,10 +233,12 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
   	
 	public void mouseClicked(MouseEvent e) {//ボタンをクリックしたときの処理
     if(myTurn==1){
-      System.out.println("クリック"+myTurn);
+      System.out.println("クリック");
       JButton theButton = (JButton)e.getComponent();//クリックしたオブジェクトを得る．型が違うのでキャストする
       String theArrayIndex = theButton.getActionCommand();//ボタンの配列の番号を取り出す
       Icon theIcon = theButton.getIcon();//theIconには，現在のボタンに設定されたアイコンが入る
+
+     
 
       if(theArrayIndex.equals("PASS")){
         String msg = "PASS";
@@ -250,6 +256,7 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
       if(judgeButton(y, x)){
         //置ける
         System.out.println("実行");
+        theSoundPlayer2 = new SoundPlayer("443_2.wav");
         String msg = "PLACE"+" "+theArrayIndex+" "+myColor;
         out.println(msg);//送信データをフラッシュ（ネットワーク上にはき出す）する
         out.flush();
@@ -307,20 +314,6 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 		System.out.println(theMLocX+","+theMLocY);//コンソールに出力する
     */
 	}
-
-  // 音声再生アクション
-  public void actionPerformed(ActionEvent e) {
-        System.out.println("アクション発生");
-        System.out.println(e.getSource());
-        String theCmd = e.getActionCommand();
-        System.out.println("ActionCommand: "+theCmd);
-        Object theObj = e.getSource();
-        System.out.println("クラス名＝" + theObj.getClass().getName());
-        String theClass = theObj.getClass().getName();//クラス名を使って動きを変える
-
-        theSoundPlayer2 = new SoundPlayer("443_2.wav");
-        theSoundPlayer2.play();
-  }
 
   // 置ける盤面かどうかを判定する関数
   //
