@@ -35,9 +35,9 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 			myName = "No name";//名前がないときは，"No name"とする
 		}
 
-		String myAddress = JOptionPane.showInputDialog(null,"IPアドレスを入力してください","IPアドレスの入力",JOptionPane.QUESTION_MESSAGE);
-		if(myAddress.equals("")){
-			myAddress = "localhost";//名前がないときは，"localhoat"とする
+		String IPAddress = JOptionPane.showInputDialog(null,"IPアドレスを入力してください","IPアドレスの入力",JOptionPane.QUESTION_MESSAGE);
+		if(IPAddress.equals("")){
+			IPAddress = "localhost";//名前がないときは，"localhoat"とする
 		}
 
 		//ウィンドウを作成する
@@ -90,14 +90,14 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 		try {
 		  //"localhost"は，自分内部への接続．localhostを接続先のIP Address（"133.42.155.201"形式）に設定すると他のPCのサーバと通信できる
 			//10000はポート番号．IP Addressで接続するPCを決めて，ポート番号でそのPC上動作するプログラムを特定する
-			socket = new Socket("localhost", 10000);
+			socket = new Socket(IPAddress, 10000);
 		} catch (UnknownHostException e) {
 			System.err.println("ホストの IP アドレスが判定できません: " + e);
 		} catch (IOException e) {
-			 System.err.println("エラーが発生しました: " + e);
+			System.err.println("エラーが発生しました: " + e);
 		}
 
-		MesgRecvThread mrt = new MesgRecvThread(socket, myName, myAddress);//受信用のスレッドを作成する
+		MesgRecvThread mrt = new MesgRecvThread(socket, myName);//受信用のスレッドを作成する
 		mrt.start();//スレッドを動かす（Runが動く）
 	}
 		
@@ -106,12 +106,10 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 		
 		Socket socket;
 		String myName;
-    String myAddress;
 		
-		public MesgRecvThread(Socket s, String n, String a){
+		public MesgRecvThread(Socket s, String n){
 			socket = s;
 			myName = n;
-      myAddress = a;
 		}
 		
 	  //通信状況を監視し，受信データによって動作する
@@ -120,7 +118,7 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 				InputStreamReader sisr = new InputStreamReader(socket.getInputStream());
 				BufferedReader br = new BufferedReader(sisr);
 				out = new PrintWriter(socket.getOutputStream(), true);
-				out.println(myName+myAddress);//接続の最初に名前を送る
+				out.println(myName);//接続の最初に名前を送る
         String myNumberStr = br.readLine();
         int myNumberInt = Integer.parseInt(myNumberStr);
         if(myNumberInt % 2 != 0){
