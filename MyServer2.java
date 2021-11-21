@@ -59,7 +59,7 @@ class MyServer2{
 	private static int member;//接続しているメンバーの数
 
 	//全員にメッセージを送る
-	public static void SendAll(String str, String myName){
+	public static void SendAll(String str, String myName, String myAddress){
 		//送られた来たメッセージを接続している全員に配る
 		for(int i=1;i<=member;i++){
 			if(flag[i] == true){

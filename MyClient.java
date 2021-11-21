@@ -97,7 +97,7 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 			 System.err.println("エラーが発生しました: " + e);
 		}
 
-		MesgRecvThread mrt = new MesgRecvThread(socket, myName);//受信用のスレッドを作成する
+		MesgRecvThread mrt = new MesgRecvThread(socket, myName, myAddress);//受信用のスレッドを作成する
 		mrt.start();//スレッドを動かす（Runが動く）
 	}
 		
@@ -106,10 +106,12 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 		
 		Socket socket;
 		String myName;
+    String myAddress;
 		
-		public MesgRecvThread(Socket s, String n){
+		public MesgRecvThread(Socket s, String n, String a){
 			socket = s;
 			myName = n;
+      myAddress = a;
 		}
 		
 	  //通信状況を監視し，受信データによって動作する
@@ -118,7 +120,7 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 				InputStreamReader sisr = new InputStreamReader(socket.getInputStream());
 				BufferedReader br = new BufferedReader(sisr);
 				out = new PrintWriter(socket.getOutputStream(), true);
-				out.println(myName);//接続の最初に名前を送る
+				out.println(myName+myAddress);//接続の最初に名前を送る
         String myNumberStr = br.readLine();
         int myNumberInt = Integer.parseInt(myNumberStr);
         if(myNumberInt % 2 != 0){
