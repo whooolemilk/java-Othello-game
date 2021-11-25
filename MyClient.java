@@ -7,7 +7,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import java.util.*;
 
-//音楽再生時に必要
+// 音楽再生時に必要
 import java.io.File;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
@@ -24,36 +24,42 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 	private Container c;
 	private ImageIcon blackIcon, whiteIcon, boardIcon;
 	PrintWriter out;
-
-  
+  JLabel theLabel1;
+  JLabel theLabel2;
+  JLabel theLabel3;
   SoundPlayer theSoundPlayer2;
 
+  int boardIconCount = 0;
+  int whiteIconCount = 0;
+  int blackIconCount = 0;
+
 	public MyClient() {
-		//名前の入力ダイアログを開く
+		// 名前の入力ダイアログを開く
 		String myName = JOptionPane.showInputDialog(null,"名前を入力してください","名前の入力",JOptionPane.QUESTION_MESSAGE);
 		if(myName.equals("")){
-			myName = "No name";//名前がないときは，"No name"とする
+			myName = "No name";// 名前がないときは，"No name"とする
 		}
 
 		String IPAddress = JOptionPane.showInputDialog(null,"IPアドレスを入力してください","IPアドレスの入力",JOptionPane.QUESTION_MESSAGE);
 		if(IPAddress.equals("")){
-			IPAddress = "localhost";//名前がないときは，"localhoat"とする
+			IPAddress = "localhost";// 名前がないときは，"localhoat"とする
 		}
 
-		//ウィンドウを作成する
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);//ウィンドウを閉じるときに，正しく閉じるように設定する
-		setTitle("MyClient");//ウィンドウのタイトルを設定する
-		setSize(650,550);//ウィンドウのサイズを設定する
-		c = getContentPane();//フレームのペインを取得する
-    c.setBackground(Color.WHITE);//ウィンドウの色の設定
+		// ウィンドウを作成する
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);// ウィンドウを閉じるときに，正しく閉じるように設定する
+		setTitle("MyClient");// ウィンドウのタイトルを設定する
+		setSize(650,550);// ウィンドウのサイズを設定する
+		c = getContentPane();// フレームのペインを取得する
+    c.setBackground(Color.WHITE);// ウィンドウの色の設定
 
-		//アイコンの設定
+		// アイコンの設定
 		whiteIcon = new ImageIcon("White1.jpg");
 		blackIcon = new ImageIcon("Black1.jpg");
 		boardIcon = new ImageIcon("GreenFrame1.jpg");
 
-		c.setLayout(null);//自動レイアウトの設定を行わない
-		//ボタンの生成
+		c.setLayout(null);// 自動レイアウトの設定を行わない
+
+		// パスボタンの生成
     passButton = new JButton();
     c.add(passButton);
     passButton.setText("パス");
@@ -61,6 +67,7 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
     passButton.addMouseListener(this);
     passButton.setActionCommand("PASS");
 
+    // リセットボタンの生成
     resetButton = new JButton();
     c.add(resetButton);
     resetButton.setText("リセット");
@@ -68,6 +75,7 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
     resetButton.addMouseListener(this);
     resetButton.setActionCommand("RESET");
 
+    // オセロボタンの生成
 		buttonArray = new JButton[8][8];
 		for(int j=0;j<8;j++){
       for(int i=0; i<8; i++){
@@ -75,21 +83,39 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 			c.add(buttonArray[j][i]);
 			buttonArray[j][i].setBounds(i*50+50,j*50+50,50,50);
 			buttonArray[j][i].addMouseListener(this);
-			//buttonArray[i][j].addMouseMotionListener(this);
 			buttonArray[j][i].setActionCommand(Integer.toString(j*8+i));
-      //buttonArray[j][i].addActionListener(this);
       }
 		}
+
+    // オセロの最初の４マス設定
     buttonArray[3][3].setIcon(whiteIcon);
     buttonArray[3][4].setIcon(blackIcon);
     buttonArray[4][3].setIcon(blackIcon);
     buttonArray[4][4].setIcon(whiteIcon);
 
-    //サーバに接続する
+    theLabel1 = new JLabel("白の数");
+    c.add(theLabel1);
+    theLabel1.setBounds(500,150,100,50);
+    theLabel1.setBackground(Color.WHITE);
+    theLabel1.setForeground(Color.BLACK);
+
+    theLabel3 = new JLabel("黒の数");
+    c.add(theLabel3);
+    theLabel3.setBounds(500,100,100,50);
+    theLabel3.setBackground(Color.WHITE);
+    theLabel3.setForeground(Color.BLACK);  
+
+    theLabel2 = new JLabel(" ");
+    c.add(theLabel2);
+    theLabel2.setBounds(500,200,100,100);
+    theLabel2.setBackground(Color.WHITE);
+    theLabel2.setForeground(Color.BLACK); 
+
+    // サーバに接続する
 		Socket socket = null;
 		try {
-		  //"localhost"は，自分内部への接続．localhostを接続先のIP Address（"133.42.155.201"形式）に設定すると他のPCのサーバと通信できる
-			//10000はポート番号．IP Addressで接続するPCを決めて，ポート番号でそのPC上動作するプログラムを特定する
+		  // "localhost"は，自分内部への接続．localhostを接続先のIP Address（"133.42.155.201"形式）に設定すると他のPCのサーバと通信できる
+			// 10000はポート番号．IP Addressで接続するPCを決めて，ポート番号でそのPC上動作するプログラムを特定する
 			socket = new Socket(IPAddress, 10000);
 		} catch (UnknownHostException e) {
 			System.err.println("ホストの IP アドレスが判定できません: " + e);
@@ -98,12 +124,11 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 		}
 
 		MesgRecvThread mrt = new MesgRecvThread(socket, myName);//受信用のスレッドを作成する
-		mrt.start();//スレッドを動かす（Runが動く）
+		mrt.start();// スレッドを動かす（Runが動く）
 	}
 		
-	//メッセージ受信のためのスレッド
+	// メッセージ受信のためのスレッド
 	public class MesgRecvThread extends Thread {
-		
 		Socket socket;
 		String myName;
 		
@@ -112,7 +137,7 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 			myName = n;
 		}
 		
-	  //通信状況を監視し，受信データによって動作する
+	  // 通信状況を監視し，受信データによって動作する
 		public void run() {
 			try{
 				InputStreamReader sisr = new InputStreamReader(socket.getInputStream());
@@ -121,133 +146,123 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 				out.println(myName);//接続の最初に名前を送る
         String myNumberStr = br.readLine();
         int myNumberInt = Integer.parseInt(myNumberStr);
+
         if(myNumberInt % 2 != 0){
-          myColor=0;//player1:Black
-          myTurn=1;
+          myColor=0;// player1:Black
+          myTurn=1;// 先行
           myIcon=blackIcon;
           yourIcon=whiteIcon;
         }else{
-          myColor=1;//player2:White
-          myTurn=0;
+          myColor=1;// player2:White
+          myTurn=0;// 後攻
           myIcon=whiteIcon;
           yourIcon=blackIcon;
         }
+
         if(myTurn==1){
+          theLabel2.setText("<html>あなたの番から始まるよ！</html>");
           System.out.println("あなたの番から始まるよ！");
         }else{
+          theLabel2.setText("<html>相手の番から始まるよ！</html>");
           System.out.println("相手の番から始まるよ！");
         }
-        
 				while(true) {
 					String inputLine = br.readLine();
           System.out.println("inputline="+inputLine);
 					if (inputLine != null) {
 						String[] inputTokens = inputLine.split(" ");
 						String cmd = inputTokens[0];
+
+            // パス機能
             if(cmd.equals("PASS")){
               myTurn = 1 - myTurn;
+              theLabel2.setText("<html>ボタンパス成功です！</html>");
               System.out.println("ボタンパス成功");
               if(myTurn==1){
+                  theLabel2.setText("<html>あなたの番です！</html>");
                   System.out.println("あなたの番です");
                 }else{
+                  theLabel2.setText("<html>相手の番です！</html>");
                   System.out.println("相手の番です");
               }
             }
-              if(cmd.equals("RESET")){
-                for(int j=0;j<8;j++){
-                  for(int i=0; i<8; i++){
-                  buttonArray[j][i].setIcon(boardIcon);
-                  }
+            // リセット機能
+            if(cmd.equals("RESET")){
+              for(int j=0;j<8;j++){
+                for(int i=0; i<8; i++){
+                buttonArray[j][i].setIcon(boardIcon);
                 }
-                buttonArray[3][3].setIcon(whiteIcon);
-                buttonArray[3][4].setIcon(blackIcon);
-                buttonArray[4][3].setIcon(blackIcon);
-                buttonArray[4][4].setIcon(whiteIcon); 
-                if(myTurn==1){
-                    System.out.println("あなたの番からはじまるよ");
-                  }else{
-                    System.out.println("相手の番からはじまるよ！");
-                }
-                System.out.println("リセット成功");
               }
-              if(cmd.equals("PLACE")){
-                String theBName = inputTokens[1];
-                int theBnum = Integer.parseInt(theBName);
-                int i = theBnum / 8;
-                int j = theBnum % 8;
-                int theColor = Integer.parseInt(inputTokens[2]);
-                
-                if(theColor==myColor){
-                  buttonArray[i][j].setIcon(myIcon);
-                  theSoundPlayer2.play();
+              buttonArray[3][3].setIcon(whiteIcon);
+              buttonArray[3][4].setIcon(blackIcon);
+              buttonArray[4][3].setIcon(blackIcon);
+              buttonArray[4][4].setIcon(whiteIcon); 
+              if(myTurn==1){
+                  System.out.println("あなたの番からはじまるよ");
                 }else{
-                  buttonArray[i][j].setIcon(yourIcon);
-                }
-                if (judgeCount() != 0){
-                  myTurn = 1 - myTurn;
-                  if(myTurn==1){
-                    System.out.println("あなたの番です");
-                  }else{
-                    System.out.println("相手の番です");
-                  }
-                }else{
-                  System.out.println("自動パス成功");
-                  if(judgeCount2() == 0){
-                    System.out.println("終了");
-                  
-                    int boardIconCount = 0;
-                    int whiteIconCount = 0;
-                    int blackIconCount = 0;
-                    for(int ia = 0; ia <8; ia++){
-                      for(int ja = 0; ja < 8; ja++){
-                        Icon theIcon = buttonArray[ia][ja].getIcon();
-                        if(theIcon == boardIcon){
-                          boardIconCount ++;
-                        }else if(theIcon == whiteIcon){
-                          whiteIconCount ++;
-                        }else if(theIcon == blackIcon){
-                          blackIconCount ++;
-                        }
-                      }
-                    }
-                    System.out.println("白の数"+whiteIconCount);
-                    System.out.println("黒の数"+blackIconCount);
-                    if(whiteIconCount==blackIconCount){
-                      System.out.println("ひきわけ");
-                    }else if(whiteIconCount>blackIconCount){
-                      if(myIcon == whiteIcon){
-                        System.out.println("勝ち");
-                      }else{
-                        System.out.println("負け");
-                      }
-                    }else{
-                      if(myIcon == blackIcon){
-                        System.out.println("勝ち");
-                      }else{
-                        System.out.println("負け");
-                      }
-                    }
-                  }
-                }
-                //System.out.println("MyTurnp2"+myTurn);
+                  System.out.println("相手の番からはじまるよ！");
               }
+              System.out.println("リセット成功");
+            }
+         
+            // ひっくり返す機能
+            if(cmd.equals("PLACE")){
+              String theBName = inputTokens[1];
+              int theBnum = Integer.parseInt(theBName);
+              int i = theBnum / 8;
+              int j = theBnum % 8;
+              int theColor = Integer.parseInt(inputTokens[2]);
+              
+              if(theColor==myColor){
+                buttonArray[i][j].setIcon(myIcon);
+                theSoundPlayer2.play();
+              }else{
+                buttonArray[i][j].setIcon(yourIcon);
+              }
+              colorCount();
+              theLabel1.setText("<html>白の数："+whiteIconCount+"</html>");
+              theLabel3.setText("<html>黒の数："+blackIconCount+"</html>");
 
-              if(cmd.equals("FLIP")){
-                String theBName = inputTokens[1];//ボタンの名前（番号）の取得
-                int theBnum = Integer.parseInt(theBName);//ボタンの名前を数値に変換する
-                int i = theBnum / 8;
-                int j = theBnum % 8;
-                int theColor = Integer.parseInt(inputTokens[2]);//数値に変換する
-                if(theColor==myColor){
-                  buttonArray[i][j].setIcon(myIcon);//blackIconに設定する
+              if (passJudgeCount() != 0){
+                myTurn = 1 - myTurn;
+                if(myTurn==1){
+                  theLabel2.setText("<html>あなたの番です！</html>");
+                  System.out.println("あなたの番です");
                 }else{
-                  buttonArray[i][j].setIcon(yourIcon);
+                  theLabel2.setText("<html>相手の番です！</html>");
+                  System.out.println("相手の番です");
+                }
+              }else{
+                theLabel2.setText("<html>自動パス発生！</html>");
+                System.out.println("自動パス成功");
+                if(endJudgeCount() == 0){
+                  System.out.println("終了");
+                  colorCount();
+                  theLabel1.setText("<html>白の数："+whiteIconCount+"</html>");
+                  theLabel3.setText("<html>黒の数："+blackIconCount+"</html>");
+                  System.out.println("白の数"+whiteIconCount);
+                  System.out.println("黒の数"+blackIconCount);
+                  winJudge();// 勝敗判定を行い、テキスト表示
                 }
               }
+            }
+
+            // FLIP機能
+            if(cmd.equals("FLIP")){
+              String theBName = inputTokens[1];//ボタンの名前（番号）の取得
+              int theBnum = Integer.parseInt(theBName);//ボタンの名前を数値に変換する
+              int i = theBnum / 8;
+              int j = theBnum % 8;
+              int theColor = Integer.parseInt(inputTokens[2]);//数値に変換する
+              if(theColor==myColor){
+                buttonArray[i][j].setIcon(myIcon);//blackIconに設定する
+              }else{
+                buttonArray[i][j].setIcon(yourIcon);
+              }
+            }
 					}else{
 						break;
 					}
-				
 				}
 				socket.close();
 			} catch (IOException e) {
@@ -263,44 +278,40 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 	}
   	
 	public void mouseClicked(MouseEvent e) {
+    System.out.println("クリック");
+    JButton theButton = (JButton)e.getComponent();
+    String theArrayIndex = theButton.getActionCommand();
+    Icon theIcon = theButton.getIcon();
+    if(theArrayIndex.equals("RESET")){
+      String msg = "RESET";
+      out.println(msg);
+      out.flush();
+    }     
     if(myTurn==1){
-      System.out.println("クリック");
-      JButton theButton = (JButton)e.getComponent();
-      String theArrayIndex = theButton.getActionCommand();
-      Icon theIcon = theButton.getIcon();
-
-     
-
       if(theArrayIndex.equals("PASS")){
         String msg = "PASS";
         out.println(msg);
         out.flush();
-      }
-
-      if(theArrayIndex.equals("RESET")){
-        String msg = "RESET";
-        out.println(msg);
-        out.flush();
-      }      
+      }     
 
       if(theIcon == boardIcon){
-      int temp = Integer.parseInt(theArrayIndex);
-      System.out.println("theArrayIndex="+temp);
-      int x = temp % 8;
-      int y = temp / 8;
+        int temp = Integer.parseInt(theArrayIndex);
+        System.out.println("theArrayIndex="+temp);
+        int x = temp % 8;
+        int y = temp / 8;
 
-      System.out.println("judgeButton="+judgeButton(y, x));
-      if(judgeButton(y, x)){
-        //置ける
-        System.out.println("実行");
-        theSoundPlayer2 = new SoundPlayer("443_2.wav");
-        String msg = "PLACE"+" "+theArrayIndex+" "+myColor;
-        out.println(msg);
-        out.flush();
-      } else {
-        //置けない
-        System.out.println("そこには配置できません");
-      }
+        System.out.println("judgeButton="+judgeButton(y, x));
+        if(judgeButton(y, x)){
+          //置ける
+          System.out.println("実行");
+          theSoundPlayer2 = new SoundPlayer("443_2.wav");
+          String msg = "PLACE"+" "+theArrayIndex+" "+myColor;
+          out.println(msg);
+          out.flush();
+        } else {
+          //置けない
+          System.out.println("そこには配置できません");
+        }
       }
       repaint();//画面のオブジェクトを描画し直す
     }
@@ -331,13 +342,14 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
       for (int i=-1;i<2;i++){
         int posY = y + j;
         int posX = x + i;
+
         if(isExceededArea(posY, posX)){
           continue;
         }
 
         Icon theIcon = buttonArray[posY][posX].getIcon();
-        //System.out.println("y+j="+(y+j)+", x+i="+(x+i));
-        int flipNum = flipButtons(y, x, j, i);
+        int flipNum = flipButtons(y, x, j, i, true);
+        
         if(flipNum >= 1){
           flag=true;
           for(int dy=j, dx=i, k=0; k<flipNum; k++, dy+=j, dx+=i){
@@ -357,7 +369,8 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
   }
 
   // ひっくり返すことのできる盤面の個数を返す関数
-  public int flipButtons(int y, int x, int j, int i){
+  // 引数sで数えるアイコンの種類を変更、trueならyourIcon、falseならmyIconを数える
+  public int flipButtons(int y, int x, int j, int i, boolean s){
     int flipNum = 0;
     if ( (j==0) && (i==0) ) return 0;
     for(int dy=j, dx=i; ; dy+=j, dx+=i) {
@@ -370,13 +383,24 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
 
       Icon theIcon = buttonArray[posY][posX].getIcon();
 
-      if(theIcon == boardIcon){
-        flipNum = 0;
-        break;
-      }else if(theIcon == myIcon){
-        break;
-      }else if (theIcon == yourIcon){
-        flipNum++;
+      if(s){
+        if(theIcon == boardIcon){
+          flipNum = 0;
+          break;
+        }else if(theIcon == myIcon){
+          break;
+        }else if (theIcon == yourIcon){
+          flipNum++;
+        }
+      }else{
+        if(theIcon == boardIcon){
+          flipNum = 0;
+          break;
+        }else if(theIcon == yourIcon){
+          break;
+        }else if (theIcon == myIcon){
+          flipNum++;
+        }
       }
     }
     return flipNum;
@@ -387,114 +411,111 @@ public class MyClient extends JFrame implements MouseListener,MouseMotionListene
     return posX < 0 || posY < 0 || posX > 7 || posY > 7;
   }
 
-  public int generatePos(int theArrayIndex){
-    int posX = theArrayIndex % 8;
-    int posY = theArrayIndex / 8;
-    return posX;
+  // 黒、白、ボード、それぞれの数を数える関数
+  public void colorCount(){
+    boardIconCount = 0;
+    whiteIconCount = 0;
+    blackIconCount = 0;
+    for(int ia = 0; ia <8; ia++){
+      for(int ja = 0; ja < 8; ja++){
+        Icon theIcon = buttonArray[ia][ja].getIcon();
+        if(theIcon == boardIcon){
+          boardIconCount ++;
+        }else if(theIcon == whiteIcon){
+          whiteIconCount ++;
+        }else if(theIcon == blackIcon){
+          blackIconCount ++;
+        }
+      }
+    }
   }
 
-  // 
-  public boolean passJudge(int y, int x) {
+  // 勝敗判定を行い、テキスト表示する関数
+  public void winJudge(){
+    if(whiteIconCount==blackIconCount){
+      theLabel2.setText("<html>ひきわけだよ！</html>");
+      System.out.println("ひきわけ");
+    }else if(whiteIconCount>blackIconCount){
+      if(myIcon == whiteIcon){
+        theLabel2.setText("<html>勝ち！おめでとう！</html>");
+        System.out.println("勝ち");
+      }else{
+        theLabel2.setText("<html>負け！残念！</html>");
+        System.out.println("負け");
+      }
+    }else{
+      if(myIcon == blackIcon){
+        theLabel2.setText("<html>勝ち！おめでとう！</html>");
+        System.out.println("勝ち");
+      }else{
+        theLabel2.setText("<html>負け！残念！</html>");
+        System.out.println("負け");
+      }
+    }
+  }
+
+
+  // パスを判定に使う関数
+  public boolean passJudge(int y, int x, boolean s) {
     boolean flag = false;
     int flipNum = 0;
     for (int j=-1; j<=1; j++){
-        for (int i=-1; i<=1; i++){
-            if ( (j==0) && (i==0) ) continue;
-            if(myTurn==1){
-              flipNum = Buttons(y, x, j, i);
-            }else{
-              flipNum = flipButtons(y, x, j, i);
-            }
-            
-            if (flipNum >= 1){
-                flag = true;
-                break;
-            }
+      for (int i=-1; i<=1; i++){
+        if ( (j==0) && (i==0) ) continue;
+        if(s){
+          if(myTurn==1){
+            flipNum = flipButtons(y, x, j, i, false);
+          }else{
+            flipNum = flipButtons(y, x, j, i, true);
+          }
+        }else{
+          if(myTurn==1){
+            flipNum = flipButtons(y, x, j, i, true);
+          }else{
+            flipNum = flipButtons(y, x, j, i, false);
+          }
         }
+        if (flipNum >= 1){
+          flag = true;
+          break;
+        }
+      }
     }
     return flag;
   }
 
-    public boolean passJudge2(int y, int x) {
-    boolean flag = false;
-    int flipNum = 0;
-    for (int j=-1; j<=1; j++){
-        for (int i=-1; i<=1; i++){
-            if ( (j==0) && (i==0) ) continue;
-            if(myTurn==1){
-              flipNum = flipButtons(y, x, j, i);
-            }else{
-              
-              flipNum = Buttons(y, x, j, i);
-            }
-            if (flipNum >= 1){
-                flag = true;
-                break;
-            }
-        }
-    }
-    return flag;
-  }
-
-    public int Buttons(int y, int x, int j, int i){
-    int flipNum = 0;
-    if ( (j==0) && (i==0) ) return 0;
-    for(int dy=j, dx=i; ; dy+=j, dx+=i) {
-      int posY = y + dy;
-      int posX = x + dx;
-
-      if(isExceededArea(posY, posX)){
-        return 0;
-      }
-
-      Icon theIcon = buttonArray[posY][posX].getIcon();
-
-      if(theIcon == boardIcon){
-        flipNum = 0;
-        break;
-      }else if(theIcon == yourIcon){
-        break;
-      }else if (theIcon == myIcon){
-        flipNum++;
-      }
-    }
-    return flipNum;
-  }
-
-
-  public int judgeCount2(){
+  // ゲームの終了を判定するためのカウント関数
+  // 0ならゲーム終了
+  public int endJudgeCount(){
     int count = 0;
     for (int j = 0; j < 8; j++) {
-        for (int i = 0; i < 8; i++) {
-          Icon theIcon = buttonArray[j][i].getIcon();
-
-          if((theIcon == boardIcon) && passJudge2(j, i)) {
-                count++;
-            }
+      for (int i = 0; i < 8; i++) {
+        Icon theIcon = buttonArray[j][i].getIcon();
+        if((theIcon == boardIcon) && passJudge(j, i, false)) {
+          count++;
         }
+      }
     }
     System.out.println("judgeCount="+count);
     return count;
   }
 
-  
-  public int judgeCount(){
+  // パスできるか判定するためのカウント関数
+  // ０ならぱす、それ以外なら次の人に
+  public int passJudgeCount(){
     int count = 0;
     for (int j = 0; j < 8; j++) {
         for (int i = 0; i < 8; i++) {
           Icon theIcon = buttonArray[j][i].getIcon();
-
-          if((theIcon == boardIcon) && passJudge(j, i)) {
+          if((theIcon == boardIcon) && passJudge(j, i, true)) {
                 count++;
             }
         }
     }
-    System.out.println("judgeCount="+count);
     return count;
   }
-
-// 音楽再生
-public class SoundPlayer{
+  // 音楽再生
+  public class SoundPlayer{
     private AudioFormat format = null;
     private DataLine.Info info = null;
     private Clip clip = null;
@@ -503,63 +524,53 @@ public class SoundPlayer{
     private boolean loopFlag = false;
 
     public SoundPlayer(String pathname){
-        File file = new File(pathname);
-        try{
-            format = AudioSystem.getAudioFileFormat(file).getFormat();
-            info = new DataLine.Info(Clip.class, format);
-            clip = (Clip) AudioSystem.getLine(info);
-            clip.open(AudioSystem.getAudioInputStream(file));
-            //clip.setLoopPoints(0,clip.getFrameLength());//無限ループとなる
-        }catch(Exception e){
-            e.printStackTrace();
-        }
+      File file = new File(pathname);
+      try{
+        format = AudioSystem.getAudioFileFormat(file).getFormat();
+        info = new DataLine.Info(Clip.class, format);
+        clip = (Clip) AudioSystem.getLine(info);
+        clip.open(AudioSystem.getAudioInputStream(file));
+      }catch(Exception e){
+        e.printStackTrace();
+      }
     }
 
     public void SetLoop(boolean flag){
-        loopFlag = flag;
+      loopFlag = flag;
     }
 
     public void play(){
-        soundThread = new Thread(){
-            public void run(){
-                long time = (long)clip.getFrameLength();//44100で割ると再生時間（秒）がでる
-                //System.out.println("PlaySound time="+time);
-                long endTime = System.currentTimeMillis()+time*1000/44100;
-                clip.start();
-                //System.out.println("PlaySound time="+(int)(time/44100));
-                while(true){
-                    if(stopFlag){//stopFlagがtrueになった終了
-                        //System.out.println("PlaySound stop by stopFlag");
-                        clip.stop();
-                        return;
-                    }
-                    //System.out.println("endTime="+endTime);
-                    //System.out.println("currentTimeMillis="+System.currentTimeMillis());
-                    if(endTime < System.currentTimeMillis()){//曲の長さを過ぎたら終了
-                        //System.out.println("PlaySound stop by sound length");
-                        if(loopFlag) {
-                            clip.loop(1);//無限ループとなる
-                        } else {
-                            clip.stop();
-                            return;
-                        }
-                    }
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
+      soundThread = new Thread(){
+        public void run(){
+          long time = (long)clip.getFrameLength();//44100で割ると再生時間（秒）がでる
+          long endTime = System.currentTimeMillis()+time*1000/44100;
+          clip.start();
+          while(true){
+            if(stopFlag){//stopFlagがtrueになった終了
+              clip.stop();
+              return;
             }
-        };
-        soundThread.start();
+            if(endTime < System.currentTimeMillis()){//曲の長さを過ぎたら終了
+              if(loopFlag) {
+                clip.loop(1);//無限ループとなる
+              } else {
+                clip.stop();
+                return;
+              }
+            }
+            try {
+              Thread.sleep(100);
+            } catch (InterruptedException e) {
+              e.printStackTrace();
+            }
+          }
+        }
+      };
+      soundThread.start();
     }
 
     public void stop(){
-        stopFlag = true;
-        //System.out.println("StopSound");
+      stopFlag = true;
     }
-
-}
-
+  }
 }
